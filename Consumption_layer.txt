@@ -1,0 +1,114 @@
+use schema consumption_zone;
+
+create or replace table my_db.consumption_zone.customer_dim(
+    customer_dim_key number autoincrement,
+    customer_id varchar,
+    salutation varchar,
+    first_name varchar,
+    last_name varchar,
+    birth_day number,
+    birth_month number,
+    birth_year number,
+    birth_country varchar,
+    email_address varchar,
+    added_timestamp timestamp default current_timestamp(),
+    update_timestamp timestamp default current_timestamp(),
+    active_flag varchar(1) default 'Y')comment='This is customer table with consumption schema' 
+
+create or replace table my_db.consumption_zone.item_dim(
+        item_dim_key number autoincrement,
+        item_id varchar,
+        item_desc varchar,
+        start_date varchar,
+        end_date varchar,
+        price varchar,
+        item_class varchar,
+        item_CATEGORY varchar
+) comment ='this is item table with in consumption schema';
+
+create or replace table orders_fact(
+    order_fact_key number autoincrement,
+    item_dim_key number,
+    customer_dim_key number ,
+    order_date varchar,
+    order_count number,
+    order_quantity number,
+    sale_price number,
+    discount_amt number,
+    coupon_amt number,
+    net_paid number,
+    net_paid_tax number,
+    net_profit number
+) comment ='this is order table with in consumption schema';
+
+
+
+insert into my_db.consumption_zone.customer_dim(
+    customer_id ,
+    salutation ,
+    first_name ,
+    last_name,
+    birth_day ,
+    birth_month,
+    birth_year ,
+    birth_country ,
+    email_address 
+)
+select customer_id ,
+    salutation ,
+    first_name ,
+    last_name,
+    birth_day ,
+    birth_month,
+    birth_year ,
+    birth_country ,
+    email_address from my_db.curated_zone.curated_customer; 
+
+insert into my_db.consumption_zone.item_dim(
+        item_id ,
+        item_desc ,
+        start_date,
+        end_date ,
+        price ,
+        item_class ,
+        item_CATEGORY 
+    ) 
+select  item_id ,
+        item_desc ,
+        start_date ,
+        end_date ,
+        price ,
+        item_class ,
+        item_CATEGORY from my_db.curated_zone.curated_item 
+
+
+insert into my_db.consumption_zone.orders_fact(
+    item_dim_key ,
+    customer_dim_key ,
+    order_date,
+    order_count,
+    order_quantity ,
+    sale_price ,
+    disount_amt,
+    coupon_amt,
+    net_paid,
+    net_paid_tax,
+    net_profit
+)
+select  
+    id.item_dim_key,
+    cd.customer_dim_key,
+    co.order_date ,
+    count(*)as order_count,
+    sum(co.order_quantity) ,
+    sum(co.sale_price) ,
+    sum(co.disount_amt) ,
+    sum(co.coupon_amt) ,
+    sum(co.net_paid) ,
+    sum(co.net_paid_tax) ,
+    sum(co.net_profit) 
+    from my_db.curated_zone.curated_order co
+    join my_db.consumption_zone.customer_dim cd on cd.customer_id=co.customer_id
+    join my_db.consumption_zone.item_dim id on id.item_id=co.item_id and id.item_desc=co.item_desc and id.end_date is null
+    group by id.item_dim_key,cd.customer_dim_key,co.order_date
+    order by co.order_date

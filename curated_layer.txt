@@ -1,0 +1,129 @@
+create or replace transient table curated_item(
+item_pk number autoincrement,
+item_id varchar,
+        item_desc varchar,
+        start_date varchar,
+        end_date varchar,
+        price varchar,
+        item_class varchar,
+        item_CATEGORY varchar
+) comment ='this is item table with in curated schema';
+
+desc table curated_item;
+
+create or replace transient table curated_customer (
+    customer_pk number autoincrement,
+    customer_id varchar,
+    salutation varchar,
+    first_name varchar,
+    last_name varchar,
+    birth_day number,
+    birth_month number,
+    birth_year number,
+    birth_country varchar,
+    email_address varchar
+) comment ='this is customer table with in curated schema';
+
+create or replace transient table curated_order (
+    order_pk number autoincrement,
+    order_date varchar,
+    order_time Time,
+    item_id varchar,
+    item_desc varchar,
+    customer_id varchar,
+    salutation varchar,
+    first_name varchar,
+    last_name varchar,
+    store_id varchar,
+    store_name varchar,
+    order_quantity number,
+    sale_price number,
+    disount_amt number,
+    coupon_amt number,
+    net_paid number,
+    net_paid_tax number,
+    net_profit number
+) comment ='this is order table with in curated schema';
+
+
+insert into my_db.curated_zone.curated_customer(
+ customer_id ,
+    salutation ,
+    first_name ,
+    last_name,
+    birth_day ,
+    birth_month,
+    birth_year ,
+    birth_country ,
+    email_address 
+)
+select customer_id ,
+    salutation ,
+    first_name ,
+    last_name,
+    birth_day ,
+    birth_month,
+    birth_year ,
+    birth_country ,
+    email_address from my_db.landing_zone.landing_customer;  
+
+
+insert into my_db.curated_zone.curated_item(
+        item_id ,
+        item_desc ,
+        start_date ,
+        end_date,
+        price ,
+        item_class ,
+        item_CATEGORY 
+)
+select item_id ,
+        item_desc ,
+        start_date ,
+        end_date ,
+        price ,
+        item_class,
+        item_CATEGORY 
+from my_db.landing_zone.landing_item
+
+insert into my_db.curated_zone.curated_order(
+     order_date,
+    order_time ,
+    item_id ,
+    item_desc ,
+    customer_id ,
+    salutation ,
+    first_name ,
+    last_name ,
+    store_id ,
+    store_name ,
+    order_quantity ,
+    sale_price ,
+    disount_amt ,
+    coupon_amt ,
+    net_paid ,
+    net_paid_tax ,
+    net_profit 
+ )
+ select      
+    order_date,
+    order_time ,
+    item_id ,
+    item_desc ,
+    customer_id ,
+    salutation ,
+    first_name ,
+    last_name ,
+    store_id ,
+    store_name ,
+    order_quantity ,
+    sale_price ,
+    disount_amt ,
+    coupon_amt ,
+    net_paid ,
+    net_paid_tax ,
+    net_profit from my_db.landing_zone.landing_order;
+
+ select * from my_db.curated_zone.curated_item;
+ select * from my_db.curated_zone.curated_order;
+ select * from my_db.curated_zone.curated_customers;

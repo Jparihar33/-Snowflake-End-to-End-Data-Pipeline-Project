@@ -1,0 +1,162 @@
+create or replace task order_curated_task
+warehouse=compute_wh
+schedule='1 minute'
+
+when 
+
+system$stream_has_data('my_db.landing_zone.landing_orders_strm')
+as 
+merge into my_db.curated_zone.curated_order curated_order
+using my_db.landing_zone.landing_orders_strm landing_orders_strm
+on curated_order.order_date=landing_orders_strm.order_date and
+ curated_order.order_time=landing_orders_strm.order_time and
+ curated_order.item_id=landing_orders_strm.item_id and
+ curated_order.item_desc=landing_orders_strm.item_desc
+
+ when matched then update
+ set
+ curated_order.customer_id=landing_orders_strm.customer_id,
+ curated_order.salutation=landing_orders_strm.salutation,
+ curated_order.first_name=landing_orders_strm.first_name,
+ curated_order.last_name=landing_orders_strm.last_name,
+ curated_order.store_id=landing_orders_strm.store_id,
+ curated_order.store_name=landing_orders_strm.store_name,
+ curated_order.order_quantity=landing_orders_strm.order_quantity,
+ curated_order.sale_price=landing_orders_strm.sale_price,
+ curated_order.disount_amt=landing_orders_strm.disount_amt,
+ curated_order.coupon_amt=landing_orders_strm.coupon_amt,
+ curated_order.net_paid=landing_orders_strm.net_paid, 
+ curated_order.net_paid_tax=landing_orders_strm.net_paid_tax,
+ curated_order.net_profit=landing_orders_strm.net_profit
+
+ when not matched then
+ insert(
+ order_date,
+ order_time,
+ item_id,
+ item_desc,
+ customer_id,
+ salutation,
+ first_name,
+ last_name,
+ store_id,
+ store_name,
+ order_quantity,
+ sale_price,
+ disount_amt,
+ coupon_amt,
+ net_paid,
+ net_paid_tax,
+ net_profit
+) values (
+landing_orders_strm.order_date,
+landing_orders_strm.order_time,
+landing_orders_strm.item_id,
+landing_orders_strm.item_desc,
+landing_orders_strm.customer_id,
+landing_orders_strm.salutation,
+landing_orders_strm.first_name,
+landing_orders_strm.last_name,
+landing_orders_strm.store_id,
+landing_orders_strm.store_name,
+landing_orders_strm.order_quantity,
+landing_orders_strm.sale_price,
+landing_orders_strm.disount_amt,
+landing_orders_strm.coupon_amt,
+landing_orders_strm.net_paid,
+landing_orders_strm.net_paid_tax,
+landing_orders_strm.net_profit,
+);
+
+--------------
+
+create or replace task customer_curated_task
+warehouse=compute_wh
+schedule='1 minute'
+
+when 
+
+system$stream_has_data('my_db.landing_zone.landing_customer_strm')
+as 
+merge into my_db.curated_zone.curated_customer curated_customer
+using my_db.landing_zone.landing_customer_strm landing_customer_strm
+on curated_customer.customer_id=landing_customer_strm.customer_id
+
+when matched then update
+ set
+curated_customer.saluation= landing_customer_strm.salutation,
+curated_customer.first_name= landing_customer_strm.first_name,
+curated_customer.last_name= landing_customer_strm.last_name,
+curated_customer.birth_day= landing_customer_strm.birth_day,
+curated_customer.birth_month= landing_customer_strm.birth_month,
+curated_customer.birth_year= landing_customer_strm.birth_year,
+curated_customer.birth_country= landing_customer_strm.birth_country,
+curated_customer.email_address= landing_customer_strm.email_address
+when not matched then insert(
+customer_id,
+salutation,
+first_name,
+last_name,
+birth_day,
+birth_month,
+birth_year,
+birth_country,
+email_address
+)
+values(
+landing_customer_strm.customer_id,
+landing_customer_strm.salutation,
+landing_customer_strm.first_name,
+landing_customer_strm.last_name,
+landing_customer_strm.birth_day,
+landing_customer_strm.birth_month,
+landing_customer_strm.birth_year,
+landing_customer_strm.birth_country,
+landing_customer_strm.email_address
+)
+
+-------
+create or replace task item_curated_task
+warehouse=compute_wh
+schedule='1 minute'
+
+when system$stream_has_data('my_db.landing_zone.landing_item_strm')
+as 
+merge into my_db.curated_zone.curated_item curated_item 
+using my_db.landing_zone.landing_item_strm landing_item_strm
+on curated_item.item_id=landing_item_strm.item_id and
+   curated_item.item_desc=landing_item_strm.item_desc and 
+   curated_item.start_date=landing_item_strm.start_date
+
+when matched then update
+set
+curated_item.end_date=landing_item_strm.end_date,
+curated_item.price=landing_item_strm.price,
+curated_item.item_class=landing_item_strm.class,
+curated_item.item_Category=landing_item_strm.category
+
+when not matched then insert(
+item_id,
+item_desc,
+start_date,
+end_date,
+price,
+item_class,
+item_category
+)
+values(
+landing_item_strm.item_id,
+landing_item_strm.item_desc,
+landing_item_strm.start_date,
+landing_item_strm.end_date,
+landing_item_strm.price,
+landing_item_strm.item_class,
+landing_item_strm.item_category);
+
+show tasks;
+
+--Resume the tasks
+
+alter task item_curated_task resume;
+alter task customer_curated_task resume;
+alter task orders_curated_task resume;

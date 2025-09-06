@@ -1,0 +1,72 @@
+create or replace database my_db;
+create or replace schema landing_zone;
+create or replace schema curated_zone;
+create or replace schema consumption_zone;
+
+use database my_db;
+use schema landing_zone;
+
+show schemas;
+
+create or replace transient table landing_item(
+item_id varchar,
+        item_desc varchar,
+        start_date varchar,
+        end_date varchar,
+        price varchar,
+        item_class varchar,
+        item_CATEGORY varchar
+) comment ='this is item table with in landing schema';
+
+select* from landing_item
+
+create or replace transient table landing_customer (
+    customer_id varchar,
+    salutation varchar,
+    first_name varchar,
+    last_name varchar,
+    birth_day number,
+    birth_month number,
+    birth_year number,
+    birth_country varchar,
+    email_address varchar
+) comment ='this is customer table with in landing schema';
+
+select * from landing_customer
+
+desc table landing_customer;
+
+create or replace transient table landing_order (
+    order_date varchar,
+    order_time Time,
+    item_id varchar,
+    item_desc varchar,
+    customer_id varchar,
+    salutation varchar,
+    first_name varchar,
+    last_name varchar,
+    store_id varchar,
+    store_name varchar,
+    order_quantity number,
+    sale_price number,
+    disount_amt number,
+    coupon_amt number,
+    net_paid number,
+    net_paid_tax number,
+    net_profit number
+) comment ='this is order table with in landing schema';
+
+select * from landing_order
+
+create or replace file format csv_format
+type = 'csv' 
+compression = 'auto' 
+field_delimiter = ',' 
+record_delimiter = '\n' 
+skip_header = 1
+field_optionally_enclosed_by = '\042' 
+null_if = ('\\N');
+
+show file formats;
+
+show tables;

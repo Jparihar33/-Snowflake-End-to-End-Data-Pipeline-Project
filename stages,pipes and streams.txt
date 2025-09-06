@@ -1,0 +1,57 @@
+create stage delta_customer_s3
+url='s3://mybucketdata/snowflakeproject/customer'
+comment='feed snowflake customer data'
+
+create stage delta_orders_s3
+url='s3://mybucketdata/snowflakeproject/orders'
+comment='feed snowflake orders data'
+
+create stage delta_item_s3
+url='s3://mybucketdata/snowflakeproject/items'
+comment='feed snowflake item data'
+
+
+show stages;
+
+create or replace pipe customer_pipe
+auto_ingest=true
+as 
+copy into landing_customer from @delta_customer_s3
+file format=(type=csv compression=none)
+pattern='.*customer.*[.]csv'
+on_error='Continue';
+
+create or replace pipe orders_pipe
+auto_ingest=true
+as 
+copy into landing_order from @delta_order_s3
+file format=(type=csv compression=none)
+pattern='.*order.*[.]csv'
+on_error='Continue';
+
+create or replace pipe item_pipe
+auto_ingest=true
+as 
+copy into landing_item from @delta_item_s3
+file format=(type=csv compression=none)
+pattern='.*item.*[.]csv'
+on_error='Continue';
+
+--lets check weather pipe running or not
+
+select system$pipe_status('item_pipe');
+select system$pipe_status('orders_pipe');
+select system$pipe_status('customer_pipe');
+
+--Create streams on named -customer stream,order stream, item stream
+
+create or replace stream landing_item_strm on table landing_item
+append_only=True;
+
+create or replace stream landing_customer_strm on table landing_customer
+append_only=True;
+
+create or replace stream landing_orders_strm on table landing_order
+append_only=True;
+
+show streams;
